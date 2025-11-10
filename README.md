@@ -11,4 +11,5 @@ This Git houses the Setup script for the MECH Raspis
 
 ## Step 2: Create user
 ```git clone clone https://github.com/tamaters/MECH_Raspi_Setup.git
-sudo bash setup-stud-user.sh``` <br />
+sudo bash setup-stud-user.sh``` 
+
