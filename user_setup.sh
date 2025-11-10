@@ -3,7 +3,7 @@
 # Exit on error
 set -e
 
-echo "=== Raspberry Pi 5 WiFi Setup and Temporary User Creation ==="
+echo "=== Creating Temporary User 'stud' ==="
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then 
@@ -11,41 +11,16 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# WiFi Configuration
-read -p "Enter WiFi SSID: " SSID
-read -p "Enter EAP Identity/Username: " EAP_IDENTITY
-read -sp "Enter EAP Password: " EAP_PASSWORD
-echo
-
-# Create NetworkManager connection for WPA/WPA2 Enterprise
-echo "Configuring WiFi connection..."
-nmcli connection add \
-    type wifi \
-    con-name "Enterprise-WiFi" \
-    ifname wlan0 \
-    ssid "$SSID" \
-    wifi-sec.key-mgmt wpa-eap \
-    802-1x.eap peap \
-    802-1x.phase2-auth mschapv2 \
-    802-1x.identity "$EAP_IDENTITY" \
-    802-1x.password "$EAP_PASSWORD"
-
-# Bring up the connection
-echo "Connecting to WiFi..."
-nmcli connection up "Enterprise-WiFi"
-
-echo "✓ WiFi connected successfully"
-
 # Create temporary user
-echo "Creating temporary user 'stud'..."
+echo "Creating user 'stud'..."
 
 # Create user with home directory
 useradd -m -s /bin/bash stud
 
 # Set password
-echo "stud:MECH2025" | chpasswd
+echo "stud:MY3.141" | chpasswd
 
-echo "✓ User 'stud' created with password 'MECH2025'"
+echo "✓ User 'stud' created with password 'MY3.141'"
 
 # Create logout cleanup script
 cat > /usr/local/bin/cleanup-stud.sh << 'EOF'
@@ -91,12 +66,19 @@ EOF
 STUD_UID=$(id -u stud)
 systemctl enable stud-cleanup@${STUD_UID}.service
 
-# Alternative: Use PAM to trigger cleanup on logout
-echo "session optional pam_exec.so /usr/local/bin/cleanup-stud.sh" >> /etc/pam.d/common-session
+# Add PAM cleanup hook
+if ! grep -q "cleanup-stud.sh" /etc/pam.d/common-session; then
+    echo "session optional pam_exec.so /usr/local/bin/cleanup-stud.sh" >> /etc/pam.d/common-session
+fi
 
 echo "✓ Cleanup mechanism configured"
 echo ""
 echo "=== Setup Complete ==="
-echo "WiFi: Connected to $SSID"
 echo "User: stud (password: MECH2025)"
 echo "Note: All changes made by 'stud' will be deleted after logout"
+echo ""
+echo "Test the setup:"
+echo "  su - stud"
+echo "  touch ~/testfile.txt"
+echo "  exit"
+echo "  # Changes should be reverted automatically"
