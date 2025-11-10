@@ -2,7 +2,7 @@ sudo nmcli connection add \
     type wifi \
     con-name "HSLU" \
     ifname wlan0 \
-    ssid "HSLU" \
+    ssid "hslu" \
     wifi-sec.key-mgmt wpa-eap \
     802-1x.eap peap \
     802-1x.phase2-auth mschapv2 \
@@ -11,3 +11,4 @@ sudo nmcli connection add \
     802-1x.system-ca-certs no \
     connection.autoconnect yes \
     connection.autoconnect-priority 100
+
