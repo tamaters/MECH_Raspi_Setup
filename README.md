@@ -29,14 +29,11 @@ sudo bash user_setup.sh
 
 ## Step 3: Install libraries
 ```
-# 1. Create and activate a virtual environment
 python3 -m venv ~/MECH
 source ~/MECH/bin/activate
 
-# 2. Upgrade pip
 pip install --upgrade pip
 
-# 3. Install all necessary libraries (including lgpio)
 pip install \
     numpy \
     matplotlib \
