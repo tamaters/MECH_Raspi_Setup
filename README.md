@@ -1,9 +1,10 @@
 # MECH_Raspi_Setup
 
 This Git houses the Setup script for the MECH Raspis
+This asumes that the MAC Adresse of the Raspi is saved in the EEE Networkmanager
 
 ## Step 1: Configure WIFI <br />
-*Change identity and password for that in the EEE* <br />
+Change identity and password for that in the EEE Networkmanager <br />
 ``` bash
 sudo nmcli connection add \
     type wifi \
@@ -19,6 +20,7 @@ sudo nmcli connection add \
     connection.autoconnect yes \
     connection.autoconnect-priority 100
 ```
+Disconnect from Raspi and then try and connect with HSLU. At first the IP might be needed.
 
 ## Step 2: Create user
 ``` bash
@@ -28,21 +30,3 @@ sudo apt install -y dos2unix
 sudo dos2unix user_setup.sh
 sudo bash user_setup.sh
 ```
-
-## Step 3: Install libraries
-```
-python3 -m venv ~/MECH
-source ~/MECH/bin/activate
-
-pip install --upgrade pip
-
-pip install \
-    numpy \
-    matplotlib \
-    gpiozero \
-    rpi-lgpio \
-    lgpio \
-    spidev
-```
-
-
