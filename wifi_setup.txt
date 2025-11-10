@@ -1,28 +1,13 @@
-[connection]
-id=HSLU
-uuid=12345678-1234-1234-1234-123456789abc
-type=wifi
-autoconnect=true
-autoconnect-priority=100
-
-[wifi]
-ssid=HSLU
-mode=infrastructure
-
-[wifi-security]
-key-mgmt=wpa-eap
-
-[802-1x]
-eap=peap
-identity=eee-w009-038
-password=nEKM7qjgDWEbB7pb2NJ2
-phase2-auth=mschapv2
-system-ca-certs=false
-
-[ipv4]
-method=auto
-
-[ipv6]
-
-method=auto
-
+sudo nmcli connection add \
+    type wifi \
+    con-name "HSLU" \
+    ifname wlan0 \
+    ssid "HSLU" \
+    wifi-sec.key-mgmt wpa-eap \
+    802-1x.eap peap \
+    802-1x.phase2-auth mschapv2 \
+    802-1x.identity "eee-w009-038" \
+    802-1x.password "nEKM7qjgDWEbB7pb2NJ2" \
+    802-1x.system-ca-certs no \
+    connection.autoconnect yes \
+    connection.autoconnect-priority 100
