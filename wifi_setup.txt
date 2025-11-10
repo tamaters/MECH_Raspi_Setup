@@ -1,12 +1,12 @@
 [connection]
-id=EEE
+id=HSLU
 uuid=12345678-1234-1234-1234-123456789abc
 type=wifi
 autoconnect=true
 autoconnect-priority=100
 
 [wifi]
-ssid=EEE
+ssid=HSLU
 mode=infrastructure
 
 [wifi-security]
@@ -25,3 +25,4 @@ method=auto
 [ipv6]
 
 method=auto
+
