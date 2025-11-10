@@ -1,42 +1,52 @@
 #!/bin/bash
+# user_setup.sh — Creates user 'stud', Python venv, and safe cleanup service
 
-# Exit on error
-set -e
+set -euo pipefail
 
-echo "=== Creating Temporary User 'stud' with Python Virtual Environment ==="
+RUN_USER="stud"
+STUD_HOME="/home/$RUN_USER"
+SYSTEMD_DIR="/etc/systemd/system"
+CLEANUP_SCRIPT="/usr/local/bin/cleanup-stud.sh"
 
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then 
-    echo "Please run as root (sudo)"
-    exit 1
+echo "=== Creating user '$RUN_USER' with MECH Python environment ==="
+
+# --- Root check ---
+if [[ $EUID -ne 0 ]]; then
+  echo "Please run this script with sudo."
+  exit 1
 fi
 
-# Check if python3-venv is installed
+# --- Ensure python3-venv and pip are installed ---
 if ! dpkg -l | grep -q python3-venv; then
-    echo "Installing python3-venv..."
-    apt-get update
-    apt-get install -y python3-venv python3-pip
+  echo "Installing python3-venv and pip..."
+  apt-get update
+  apt-get install -y python3-venv python3-pip
 fi
 
-# Create temporary user
-echo "Creating user 'stud'..."
+# --- Create user if missing ---
+if id "$RUN_USER" &>/dev/null; then
+  echo "User '$RUN_USER' already exists."
+else
+  echo "Creating user '$RUN_USER'..."
+  useradd -m -s /bin/bash "$RUN_USER"
+  echo "$RUN_USER:MY3.141" | chpasswd
+  echo "✓ User '$RUN_USER' created with password 'MY3.141'"
+fi
 
-# Create user with home directory
-useradd -m -s /bin/bash stud
+# --- Create Python virtual environment if missing ---
+if [[ ! -d "$STUD_HOME/MECH" ]]; then
+  echo "Creating Python virtual environment 'MECH'..."
+  su - "$RUN_USER" -c "python3 -m venv ~/MECH"
+  echo "Installing required libraries into MECH venv..."
+  su - "$RUN_USER" -c "source ~/MECH/bin/activate && pip install --upgrade pip && pip install numpy matplotlib gpiozero rpi-lgpio lgpio spidev"
+  echo "✓ Virtual environment 'MECH' ready"
+else
+  echo "Virtual environment already exists — skipping creation."
+fi
 
-# Set password
-echo "stud:MY3.141" | chpasswd
-
-echo "✓ User 'stud' created with password 'MY3.141'"
-
-# Create Python virtual environment as the stud user
-echo "Creating Python virtual environment 'MECH'..."
-su - stud -c "python3 -m venv ~/MECH"
-
-echo "✓ Virtual environment 'MECH' created"
-
-# Configure automatic activation in .bashrc
-cat >> /home/stud/.bashrc << 'EOF'
+# --- Add auto-activation to .bashrc ---
+if ! grep -q "MECH/bin/activate" "$STUD_HOME/.bashrc" 2>/dev/null; then
+  cat >> "$STUD_HOME/.bashrc" <<'EOF'
 
 # Auto-activate MECH virtual environment
 if [ -d "$HOME/MECH" ]; then
@@ -44,49 +54,50 @@ if [ -d "$HOME/MECH" ]; then
     echo "✓ MECH virtual environment activated"
 fi
 EOF
-
-# Also create .bash_profile to ensure it works for login shells
-cat > /home/stud/.bash_profile << 'EOF'
-# Load .bashrc if it exists
-if [ -f ~/.bashrc ]; then
-    . ~/.bashrc
 fi
+
+# --- Ensure .bash_profile loads .bashrc ---
+cat > "$STUD_HOME/.bash_profile" <<'EOF'
+# Load .bashrc if it exists
+[ -f ~/.bashrc ] && . ~/.bashrc
 EOF
 
-chown stud:stud /home/stud/.bashrc
-chown stud:stud /home/stud/.bash_profile
+chown "$RUN_USER:$RUN_USER" "$STUD_HOME/.bashrc" "$STUD_HOME/.bash_profile"
 
-echo "✓ Auto-activation configured in .bashrc"
+echo "✓ Auto-activation configured"
 
-# Create logout cleanup script
-cat > /usr/local/bin/cleanup-stud.sh << 'EOF'
+# --- Create cleanup script ---
+cat > "$CLEANUP_SCRIPT" <<'EOF'
 #!/bin/bash
+# cleanup-stud.sh — Cleans user-created Python files after logout
 
-# Wait for user to fully logout
+STUD_HOME="/home/stud"
+LOGFILE="/var/log/cleanup-stud.log"
+
 sleep 2
 
-# Check if user is still logged in
+# Proceed only if user is fully logged out
 if ! who | grep -q "^stud "; then
-    # Create snapshot of original home directory if it doesn't exist
-    if [ ! -d /home/stud.original ]; then
-        cp -a /home/stud /home/stud.original
-    fi
-    
-    # Delete current home directory and restore original
-    rm -rf /home/stud
-    cp -a /home/stud.original /home/stud
-    chown -R stud:stud /home/stud
-    
-    logger "User 'stud' home directory reset to original state"
+    echo "$(date): Cleaning user-created Python files in $STUD_HOME" >> "$LOGFILE"
+
+    # Delete only user-created files (preserve virtualenv & libraries)
+    find "$STUD_HOME" -type f \( -name "*.py" -o -name "*.ipynb" -o -name "*.txt" -o -name "*.csv" -o -name "*.log" \) -delete
+
+    # Remove Python cache directories
+    find "$STUD_HOME" -type d \( -name "__pycache__" -o -name ".pytest_cache" -o -name ".cache" \) -exec rm -rf {} +
+
+    chown -R stud:stud "$STUD_HOME"
+    logger "User 'stud' cleanup: removed custom Python files, kept MECH libraries intact"
 fi
 EOF
 
-chmod +x /usr/local/bin/cleanup-stud.sh
+chmod +x "$CLEANUP_SCRIPT"
+echo "✓ Created cleanup script at $CLEANUP_SCRIPT"
 
-# Create systemd service to run cleanup on logout
-cat > /etc/systemd/system/stud-cleanup@.service << 'EOF'
+# --- Create systemd cleanup service ---
+cat > "$SYSTEMD_DIR/stud-cleanup@.service" <<'EOF'
 [Unit]
-Description=Cleanup stud user changes after logout
+Description=Cleanup stud user-created files after logout
 After=user@%i.service
 
 [Service]
@@ -98,26 +109,23 @@ RemainAfterExit=no
 WantedBy=multi-user.target
 EOF
 
-# Enable the service for the stud user's UID
-STUD_UID=$(id -u stud)
-systemctl enable stud-cleanup@${STUD_UID}.service
+# --- Enable service for stud’s UID ---
+STUD_UID=$(id -u "$RUN_USER")
+systemctl enable stud-cleanup@"${STUD_UID}".service
 
-# Add PAM cleanup hook
+# --- Add PAM hook if not already present ---
 if ! grep -q "cleanup-stud.sh" /etc/pam.d/common-session; then
-    echo "session optional pam_exec.so /usr/local/bin/cleanup-stud.sh" >> /etc/pam.d/common-session
+  echo "session optional pam_exec.so /usr/local/bin/cleanup-stud.sh" >> /etc/pam.d/common-session
 fi
 
-echo "✓ Cleanup mechanism configured"
 echo ""
 echo "=== Setup Complete ==="
-echo "User: stud (password: MY3.141)"
+echo "User: $RUN_USER (password: MY3.141)"
 echo "Virtual Environment: MECH (auto-activates on login)"
-echo "Note: All changes made by 'stud' will be deleted after logout"
+echo "Cleanup: deletes only user-created Python files after logout"
 echo ""
-echo "Test the setup:"
+echo "Test it:"
 echo "  su - stud"
-echo "  # MECH venv should auto-activate"
-echo "  which python"
-echo "  pip install numpy  # Install something"
+echo "  echo 'print(123)' > test.py"
 echo "  exit"
-echo "  # Changes should be reverted automatically"
+echo "  # test.py will be automatically deleted"
