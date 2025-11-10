@@ -10,4 +10,5 @@ This Git houses the Setup script for the MECH Raspis
 ```sudo nmcli connection up University-WiFi``` <br />
 
 ## Step 2: Create user
-```sudo bash setup-stud-user.sh``` <br />
+```git clone clone https://github.com/tamaters/MECH_Raspi_Setup.git
+sudo bash setup-stud-user.sh``` <br />
