@@ -15,6 +15,7 @@ sudo nmcli connection up University-WiFi
 
 ## Step 2: Create user
 ``` bash
+sudo apt-get update -y && sudo apt-get install -y git
 git clone https://github.com/tamaters/MECH_Raspi_Setup.git MECH_Raspi_Setup && cd MECH_Raspi_Setup
 sudo bash user_setup.sh
 ``` 
