@@ -3,13 +3,19 @@
 This Git houses the Setup script for the MECH Raspis
 
 ## Step 1: Configure WIFI <br />
-```sudo nano /etc/NetworkManager/system-connections/University-WiFi.nmconnection``` <br />
+``` bash
+sudo nano /etc/NetworkManager/system-connections/University-WiFi.nmconnection
+```
 *Paste the config, edit SSID/username/password* <br />
-```sudo chmod 600 /etc/NetworkManager/system-connections/University-WiFi.nmconnection``` <br />
-```sudo nmcli connection reload``` <br />
-```sudo nmcli connection up University-WiFi``` <br />
+``` bash
+sudo chmod 600 /etc/NetworkManager/system-connections/University-WiFi.nmconnection
+sudo nmcli connection reload
+sudo nmcli connection up University-WiFi
+```
 
 ## Step 2: Create user
-```git clone clone https://github.com/tamaters/MECH_Raspi_Setup.git
-sudo bash setup-stud-user.sh``` 
+``` bash
+git clone clone https://github.com/tamaters/MECH_Raspi_Setup.git
+sudo bash setup-stud-user.sh
+``` 
 
