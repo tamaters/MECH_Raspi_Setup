@@ -25,5 +25,25 @@ sudo nmcli connection add \
 sudo apt-get update -y && sudo apt-get install -y git
 git clone https://github.com/tamaters/MECH_Raspi_Setup.git MECH_Raspi_Setup && cd MECH_Raspi_Setup
 sudo bash user_setup.sh
-``` 
+```
+
+## Step 3: Install libraries
+```
+# 1. Create and activate a virtual environment
+python3 -m venv ~/MECH
+source ~/MECH/bin/activate
+
+# 2. Upgrade pip
+pip install --upgrade pip
+
+# 3. Install all necessary libraries (including lgpio)
+pip install \
+    numpy \
+    matplotlib \
+    gpiozero \
+    rpi-lgpio \
+    lgpio \
+    spidev
+```
+
 
