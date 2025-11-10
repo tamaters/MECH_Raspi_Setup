@@ -9,5 +9,5 @@ sudo chmod 600 /etc/NetworkManager/system-connections/University-WiFi.nmconnecti
 sudo nmcli connection reload
 sudo nmcli connection up University-WiFi
 
-#Step 2: Create user
+# Step 2: Create user
 sudo bash setup-stud-user.sh
