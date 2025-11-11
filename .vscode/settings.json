@@ -1,0 +1,8 @@
+{
+  "python.defaultInterpreterPath": "/opt/.venvs/MECH/bin/python",
+  "remoteEnv": {
+    "VIRTUAL_ENV": "/opt/.venvs/MECH",
+    "PATH": "/opt/.venvs/MECH/bin:${env:PATH}"
+  }
+  "makefile.configureOnOpen": false
+}
