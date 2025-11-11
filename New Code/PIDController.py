@@ -14,9 +14,10 @@ class PIDController:
         self.refposition = 415               # Reference position in mm
         self.errorLinear = self.refposition  # Initial error
         self.errorIntegral = 0
+        self.antiwindup = 1024  # max output limit (equals 5 V = 1024)
 
         # PID constants:
-        self.kp = 0.5
+        self.kp = 20
         self.ki = 0.05
         self.kd = 0.005
 
@@ -28,15 +29,29 @@ class PIDController:
         self.errorIntegral = 0
 
     def calculateTargetValue(self, actualValue):
-        """
-        Calculate next target values with the help of a PID controller.
-        """
-        # ToDo
-        # ...
+        # Save old linear error for derivative term
+        errorLinearold = self.errorLinear
 
-        # Save the three parts of the controler in a vector
+        # P term
+        self.errorLinear = round(self.refposition - actualValue)
+        p_part = self.kp * self.errorLinear
+
+        # I term (integral with anti-windup)
+        self.errorIntegral += self.errorLinear * 0.01
+        if abs(self.errorIntegral * self.ki) > self.antiwindup:
+            self.errorIntegral = (
+                self.antiwindup / self.ki
+                if self.errorIntegral > 0
+                else -self.antiwindup / self.ki
+            )
+        i_part = self.ki * self.errorIntegral
+
+        # D term
+        errorDerivative = (self.errorLinear - errorLinearold) / 0.01
+        d_part = self.kd * errorDerivative
+
+        # Combine
         PIDactions = [p_part, i_part, d_part]
-        # The output speed is the sum of the parts
         targetValue = sum(PIDactions)
 
         return int(targetValue), PIDactions
