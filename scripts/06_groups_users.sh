@@ -22,7 +22,7 @@ fi
 if id -u stud >/dev/null 2>&1; then
   echo "[users] stud existiert bereits"
 else
-  useradd -m -g stud -G gpio,i2c,vnc -s /bin/bash stud
+  useradd -m -g stud -G gpio,i2c,spi,vnc -s /bin/bash stud
   echo "[users] Benutzer stud angelegt"
 fi
 
@@ -36,7 +36,7 @@ fi
 
 # 10) Passwörter setzen (non-interaktiv)
 # ACHTUNG: steht hier explizit, weil gefordert – ggf. später ändern!
-echo 'stud:muffin2019' | chpasswd
+echo 'stud:MY3.141' | chpasswd
 echo 'labor1:cupcake2019' | chpasswd
 
 echo "[sudoers] Erlaube Gruppe stud: poweroff & shutdown ohne Passwort"
