@@ -7,6 +7,7 @@ VENV_DIR=${VENV_DIR:-/opt/.venvs/MECH}
 GROVE_REPO_BRANCH=${GROVE_REPO_BRANCH:-master}   # Branch deines Forks jonasjosi-hslu/grove.py
 
 echo "[PKGS] Verwende venv: $VENV_DIR"
+
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
   echo "[FEHLER] venv unter $VENV_DIR nicht gefunden. Bitte zuerst 10_create_global_venv.sh ausführen." >&2
   exit 1
@@ -14,6 +15,10 @@ fi
 
 echo "[PKGS] Aktualisiere Pip-Tools"
 "$VENV_DIR/bin/pip" install --upgrade pip wheel setuptools
+
+echo "[PKGS] Installiere System-Abhängigkeiten für lgpio..."
+apt-get update
+apt-get install -y swig liblgpio-dev python3-dev build-essential
 
 echo "[PKGS] Installiere lgpio"
 "$VENV_DIR/bin/pip" install lgpio
@@ -43,7 +48,7 @@ fi
 echo "[PKGS] Prüfe Installation durch Import-Tests"
 "$VENV_DIR/bin/python" - <<'PY'
 missing = []
-for name in ("lgpio"):
+for name in ("lgpio", "matplotlib", "numpy", "gpiozero", "spidev"):
     try:
         __import__(name)
     except Exception as e:
