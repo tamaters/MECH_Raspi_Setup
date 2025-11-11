@@ -26,7 +26,12 @@ Disconnect from Raspi and then try and connect with HSLU. At first the IP might 
 ``` bash
 sudo apt-get update -y && sudo apt-get install -y git
 git clone https://github.com/tamaters/MECH_Raspi_Setup.git MECH_Raspi_Setup && cd MECH_Raspi_Setup
-sudo make all
+sudo bash scripts/05_system_update.sh
+sudo bash scripts/06_groups_users.sh
+sudo bash scripts/10_create_global_venv.sh
+sudo bash scripts/20_install_packages.sh
+sudo bash scripts/30_shell_activation.sh
+sudo bash scripts/45_mech_lab_reset_home_dir.sh
 ```
 
 ## Step 3: Interface enable
