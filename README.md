@@ -30,3 +30,7 @@ sudo apt install -y dos2unix
 sudo dos2unix user_setup.sh
 sudo bash user_setup.sh
 ```
+
+## Step 3: Interface enable
+```sudo raspi-config```
+Enable SPI and Enable I2C
