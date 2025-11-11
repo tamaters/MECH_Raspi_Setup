@@ -1,7 +1,7 @@
 # MECH_Raspi_Setup
 
-This Git houses the Setup script for the MECH Raspis
-This asumes that the MAC Adresse of the Raspi is saved in the EEE Networkmanager
+This Git houses the Setup script for the MECH Raspis.
+This asumes that the MAC Adresse of the Raspi is saved in the EEE Networkmanager.
 
 ## Step 1: Configure WIFI <br />
 Change identity and password for that in the EEE Networkmanager <br />
