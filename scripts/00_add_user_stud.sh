@@ -2,7 +2,7 @@
 set -euo pipefail
 
 USER_NAME=${USER_NAME:-stud}
-USER_PASS=${USER_PASS:-muffin2019}
+USER_PASS=${USER_PASS:-MY3.141}
 
 if id -u "$USER_NAME" >/dev/null 2>&1; then
   echo "[INFO] Benutzer $USER_NAME existiert bereits – überspringe Anlage."
