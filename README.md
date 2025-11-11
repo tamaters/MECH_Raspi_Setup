@@ -32,5 +32,10 @@ sudo bash user_setup.sh
 ```
 
 ## Step 3: Interface enable
-```sudo raspi-config```
+```
+sudo raspi-config
+```
 Enable SPI and Enable I2C
+```
+sudo reboot
+```
