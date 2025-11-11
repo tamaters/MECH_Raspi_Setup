@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/30_shell_activation.sh
-# Richtet systemweite Auto-Aktivierung der globalen venv ein und ergänzt Benutzer-Shells.
+# Richtet systemweite Auto-Aktivierung der globalen venv ein (auch für VS Code, non-interactive shells).
 set -euo pipefail
 
 VENV_DIR=${VENV_DIR:-/opt/.venvs/MECH}
@@ -14,18 +14,14 @@ append_if_missing() { # <file> <marker>  (Inhalt wird aus STDIN gelesen)
   grep -Fq "$marker" "$file" || cat >> "$file"
 }
 
-echo "[1/4] Systemweite Aktivierung über /etc/profile.d"
-# Ganz wichtig: gequoteter Heredoc, damit $... NICHT jetzt expandiert, sondern erst zur Laufzeit der Login-Shell.
+echo "[1/4] Systemweite Aktivierung über /etc/profile.d (non-interactive-safe)"
+# WICHTIG: Kein case $- in *i*-Check mehr → wird in allen Shell-Typen aktiviert.
 cat > "$PROFILED_SCRIPT" <<'EOS'
 # /etc/profile.d/activate_venv_mech.sh
 VENV_DIR=/opt/.venvs/MECH
-case $- in
-  *i*)
-    if [ -z "$VIRTUAL_ENV" ] && [ -f "$VENV_DIR/bin/activate" ]; then
-      . "$VENV_DIR/bin/activate"
-    fi
-    ;;
-esac
+if [ -z "$VIRTUAL_ENV" ] && [ -f "$VENV_DIR/bin/activate" ]; then
+  . "$VENV_DIR/bin/activate"
+fi
 EOS
 chmod +x "$PROFILED_SCRIPT"
 
@@ -35,17 +31,15 @@ for home in /root /home/*; do
   owner="$(stat -c "%U" "$home" || echo root)"
   group="$(stat -c "%G" "$home" || echo root)"
 
-  # ~/.bashrc ergänzen (idempotent) – wieder: gequoteter Heredoc, damit $... nicht jetzt expandiert
   BRC="$home/.bashrc"
   append_if_missing "$BRC" "# >>> venv_mech auto-activate >>>" <<'EOBRC'
 # >>> venv_mech auto-activate >>>
 if [ -z "$VIRTUAL_ENV" ] && [ -f /opt/.venvs/MECH/bin/activate ]; then
-  case $- in *i*) . /opt/.venvs/MECH/bin/activate ;; esac
+  . /opt/.venvs/MECH/bin/activate
 fi
 # <<< venv_mech auto-activate <<<
 EOBRC
 
-  # ~/.bashrc_with_venv neu schreiben (hier komplett ersetzen/erstellen)
   BRCV="$home/.bashrc_with_venv"
   cat > "$BRCV" <<'EOV'
 # Spezielle Bashrc: erst normale ~/.bashrc laden
@@ -63,16 +57,14 @@ EOV
 done
 
 echo "[3/4] Vorlagen für künftige Nutzer in /etc/skel"
-# ~/.bashrc Ergänzung in /etc/skel
 append_if_missing /etc/skel/.bashrc "# >>> venv_mech auto-activate >>>" <<'EOSKEL'
 # >>> venv_mech auto-activate >>>
 if [ -z "$VIRTUAL_ENV" ] && [ -f /opt/.venvs/MECH/bin/activate ]; then
-  case $- in *i*) . /opt/.venvs/MECH/bin/activate ;; esac
+  . /opt/.venvs/MECH/bin/activate
 fi
 # <<< venv_mech auto-activate <<<
 EOSKEL
 
-# ~/.bashrc_with_venv Vorlage in /etc/skel
 cat > /etc/skel/.bashrc_with_venv <<'EOV'
 if [ -f ~/.bashrc ]; then
   . ~/.bashrc
@@ -87,4 +79,4 @@ echo "[4/4] Test"
 if [ -x "$VENV_DIR/bin/python" ]; then
   echo "Python: $("$VENV_DIR"/bin/python -V 2>/dev/null || true)"
 fi
-echo "[OK] Shell-Aktivierung eingerichtet."
+echo "[OK] Shell-Aktivierung (global + non-interactive) eingerichtet."
