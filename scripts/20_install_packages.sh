@@ -18,9 +18,20 @@ echo "[PKGS] Aktualisiere Pip-Tools"
 echo "[PKGS] Installiere lgpio"
 "$VENV_DIR/bin/pip" install lgpio
 
-echo "[PKGS] Installiere grove.py aus deinem Fork/Branch: jonasjosi-hslu/grove.py@$GROVE_REPO_BRANCH"
-"$VENV_DIR/bin/pip" install \
-  "git+https://github.com/jonasjosi-hslu/grove.py.git@${GROVE_REPO_BRANCH}"
+echo "[PKGS] Installiere matplotlib"
+"$VENV_DIR/bin/pip" install matplotlib
+
+echo "[PKGS] Installiere rpi-lgpio"
+"$VENV_DIR/bin/pip" install rpi-lgpio
+
+echo "[PKGS] Installiere spidev"
+"$VENV_DIR/bin/pip" install spidev
+
+echo "[PKGS] Installiere numpy"
+"$VENV_DIR/bin/pip" install numpy
+
+echo "[PKGS] Installiere gpiozero"
+"$VENV_DIR/bin/pip" install gpiozero
 
 # Schutz: Falls versehentlich ein fremdes 'importlib' Paket installiert wurde, entfernt es die Stdlib-Funktionalität.
 # Das führt später u.a. zu 'AttributeError: module importlib has no attribute util'.
@@ -32,7 +43,7 @@ fi
 echo "[PKGS] Prüfe Installation durch Import-Tests"
 "$VENV_DIR/bin/python" - <<'PY'
 missing = []
-for name in ("lgpio", "grove"):
+for name in ("lgpio"):
     try:
         __import__(name)
     except Exception as e:
